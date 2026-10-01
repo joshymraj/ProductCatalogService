@@ -8,7 +8,7 @@ import java.util.Date;
 @Getter
 @Setter
 public abstract class BaseModel {
-    private int id;
+    private Long id;
     private Date createdOn;
     private Date updatedOn;
     private State isActive;

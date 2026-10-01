@@ -4,43 +4,52 @@ import com.joshlabs.productcatalogservice.dtos.CategoryDto;
 import com.joshlabs.productcatalogservice.dtos.ProductDto;
 import com.joshlabs.productcatalogservice.models.Category;
 import com.joshlabs.productcatalogservice.models.Product;
-import com.joshlabs.productcatalogservice.models.State;
 import com.joshlabs.productcatalogservice.services.IProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.*;
 
 @RestController
+@RequestMapping("/products")
 public class ProductController {
 
     @Autowired
     private IProductService productService;
 
-    @GetMapping("/products")
+    @GetMapping
     public List<ProductDto> getAllProducts() {
+
+        List<Product> products = productService.getAllProducts();
         List<ProductDto> productDtos = new ArrayList<>();
-        ProductDto productDto = new ProductDto();
-        productDto.setId(1);
-        productDto.setName("Macbook Pro");
-        productDto.setDescription("M1 Max");
-        productDtos.add(productDto);
+        for(Product product : products) {
+            productDtos.add(convertModelToDto(product));
+        }
         return productDtos;
     }
 
-    @GetMapping("/products/{id}")
-    public ProductDto getProductById(@PathVariable("id") int productId) {
+    @GetMapping("/{id}")
+    public ProductDto getProductById(@PathVariable("id") Long productId) {
         Product product = productService.getProductById(productId);
-        return convertToProductDto(product);
+        if(product == null) {
+            throw new NullPointerException("There is no product with this id.");
+        }
+        return convertModelToDto(product);
     }
 
-    @PostMapping("/products")
+    @PostMapping
     public ProductDto createProduct(@RequestBody ProductDto productDto) {
-        return productDto;
+        Product addedProduct = productService.createProduct(convertDtoToModel(productDto));
+        return convertModelToDto(addedProduct);
     }
 
-    private Product convertToProduct(ProductDto productDto) {
+    @PutMapping("/{id}")
+    public ProductDto updateProduct(@PathVariable Long id, @RequestBody ProductDto productDto) {
+        Product updatedProduct = productService.updateProduct(id, convertDtoToModel(productDto));
+        return convertModelToDto(updatedProduct);
+    }
+
+    private Product convertDtoToModel(ProductDto productDto) {
         Product product = new Product();
         product.setId(productDto.getId());
         product.setName(productDto.getName());
@@ -58,7 +67,7 @@ public class ProductController {
         return product;
     }
 
-    private ProductDto convertToProductDto(Product product) {
+    private ProductDto convertModelToDto(Product product) {
         ProductDto productDto = new ProductDto();
         productDto.setId(product.getId());
         productDto.setName(product.getName());
